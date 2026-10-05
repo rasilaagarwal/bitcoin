@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bitcoin next-day direction: algorithm dashboard</title>
+<style>
+:root{--bg:#f4f7f8;--card:#fff;--ink:#14232b;--muted:#5b6b73;--line:#d5dfe3;--teal:#0b6e7f;--tealbg:#dff0f3;--amber:#c77d0a;--bad:#b3412f;--good:#1d7a4a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e191e;--card:#16262d;--ink:#e6eef1;--muted:#9bb0b8;--line:#2a3d46;--teal:#4fc1d3;--tealbg:#17424b;--amber:#e8a33d;--bad:#e8806c;--good:#5cc98e}}
+:root[data-theme="dark"]{--bg:#0e191e;--card:#16262d;--ink:#e6eef1;--muted:#9bb0b8;--line:#2a3d46;--teal:#4fc1d3;--tealbg:#17424b;--amber:#e8a33d;--bad:#e8806c;--good:#5cc98e}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:1040px;margin:0 auto;padding:22px 16px 40px}
+h1{font-size:1.45rem;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 18px}
+.grid{display:grid;grid-template-columns:260px 1fr;gap:18px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+h2{font-size:.95rem;margin:0 0 10px;color:var(--muted);font-weight:600}
+.seg{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}select{width:100%;font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-bottom:16px}.tr{display:grid;grid-template-columns:54px 1fr 54px;gap:8px;align-items:center;font-size:.8rem;margin:3px 0;cursor:pointer}.tr.sel b{color:var(--teal)}.tz{position:relative;height:12px;background:var(--line);border-radius:3px}.tz:before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--ink)}.tz i{position:absolute;top:0;bottom:0;border-radius:2px}
+button{font:inherit;color:inherit;cursor:pointer}
+.seg button,.alg button{border:1px solid var(--line);background:transparent;border-radius:8px;padding:8px 10px;text-align:left}
+.seg button{flex:1;min-width:110px}
+.alg{display:flex;flex-direction:column;gap:6px}
+.alg button{display:flex;justify-content:space-between;align-items:center;gap:8px}
+button[aria-pressed="true"]{border-color:var(--teal);background:var(--tealbg);font-weight:600}
+button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.tag{font-size:.72rem;background:var(--amber);color:#fff;border-radius:99px;padding:1px 8px;font-weight:600}
+.best{width:100%;margin-top:14px;background:var(--teal);color:#fff;border:0;border-radius:8px;padding:10px;font-weight:600}
+:root[data-theme="dark"] .best{color:#06242a}
+.hero{margin-bottom:14px}
+.hero .v{font-size:1.2rem;font-weight:650;line-height:1.35;margin:0 0 6px}
+.hero .d{color:var(--muted);margin:0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.k{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.k b{display:block;font-size:1.5rem;line-height:1.1}
+.k span{color:var(--muted);font-size:.82rem}
+.row2{display:grid;grid-template-columns:230px 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:680px){.row2{grid-template-columns:1fr}}
+.cm{display:grid;grid-template-columns:auto 1fr 1fr;gap:4px;font-size:.82rem;text-align:center;align-items:center}
+.cm .c{padding:14px 4px;border-radius:6px;font-weight:700;font-size:1.05rem}
+.cm i{color:var(--muted);font-style:normal}
+.bar{display:grid;grid-template-columns:120px 1fr 52px;gap:8px;align-items:center;margin:7px 0;font-size:.88rem}
+.trk{position:relative;height:16px;background:var(--line);border-radius:4px}
+.fill{height:100%;border-radius:4px;background:var(--muted)}
+.bar.sel .fill{background:var(--teal)}
+.mk{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--amber)}
+.lg{font-size:.78rem;color:var(--muted);margin-top:6px}
+.lg u{display:inline-block;width:10px;height:2px;background:var(--amber);vertical-align:middle;margin-right:4px;text-decoration:none}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.88rem}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600}
+tr.sel td{background:var(--tealbg);font-weight:600}
+.pos{color:var(--good)}.neg{color:var(--bad)}
+.note{color:var(--muted);font-size:.82rem;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Bitcoin next-day direction: which algorithm fits best?</h1>
+<p class="sub">Task A: predict whether tomorrow's close is higher (up) or lower (down) than today's. Pick a data window and an algorithm to see how it did on unseen days.</p>
+<div class="grid">
+<div class="card">
+<h2>Two-year window</h2>
+<select id="winsel" aria-label="Two-year window"></select>
+<h2>Features</h2>
+<div class="seg" id="mode"></div>
+<h2>Algorithm</h2>
+<div class="alg" id="alg"></div>
+<button class="best" id="best">Pick the best for me</button>
+</div>
+<div>
+<div class="card hero"><p class="v" id="verdict"></p><p class="d" id="detail"></p></div>
+<div class="kpis" id="kpis"></div>
+<div class="row2">
+<div class="card"><h2>Confusion matrix</h2><div class="cm" id="cm"></div></div>
+<div class="card"><h2>Accuracy of every algorithm</h2><div id="bars"></div><div class="lg"><u></u>Always predicting "up" (the baseline to beat)</div></div>
+</div>
+<div class="card" style="margin-bottom:14px"><h2 id="trh"></h2><div id="trend"></div><div class="lg">Bars right of the line beat the always-up baseline; bars left of it do worse. Click a row to switch window.</div></div>
+<div class="card tw"><h2>Full comparison</h2><table id="tbl"></table></div>
+</div>
+</div>
+<p class="note">Results come from saved runs on the full dataset (7,757,458 one-minute rows, aggregated to daily candles) and are not recalculated in this page. Each window is split into an older half (training) and a newer half (testing), as in your code. The last window, 2025-26, ends on 30 Sep 2026. \u201cRaw\u201d matches your code; \u201cScaled\u201d standardises the features first. Academic use only, not financial advice.</p>
+</div>
+<script>
+const ALGS=["Logistic Regression","SVM (RBF)","Random Forest","KNN (k=31)"];
+const W={"2012-13":{"n":341,"raw":[[[3,127],[6,205]],[[0,130],[0,211]],[[21,109],[51,160]],[[35,95],[53,158]]],"scaled":[[[26,104],[40,171]],[[20,110],[41,170]],[[21,109],[51,160]],[[23,107],[37,174]]]},"2013-14":{"n":340,"raw":[[[0,189],[0,151]],[[0,189],[0,151]],[[43,146],[33,118]],[[32,157],[26,125]]],"scaled":[[[3,186],[3,148]],[[0,189],[0,151]],[[43,146],[33,118]],[[68,121],[57,94]]]},"2014-15":{"n":339,"raw":[[[163,0],[175,1]],[[162,1],[175,1]],[[125,38],[136,40]],[[143,20],[149,27]]],"scaled":[[[138,25],[153,23]],[[137,26],[140,36]],[[125,38],[136,40]],[[136,27],[137,39]]]},"2015-16":{"n":341,"raw":[[[36,103],[42,160]],[[2,137],[4,198]],[[49,90],[70,132]],[[38,101],[83,119]]],"scaled":[[[39,100],[46,156]],[[38,101],[43,159]],[[49,90],[70,132]],[[37,102],[42,160]]]},"2016-17":{"n":341,"raw":[[[2,137],[1,201]],[[0,139],[2,200]],[[8,131],[28,174]],[[7,132],[5,197]]],"scaled":[[[28,111],[42,160]],[[17,122],[33,169]],[[8,131],[28,174]],[[11,128],[27,175]]]},"2017-18":{"n":340,"raw":[[[2,171],[3,164]],[[2,171],[2,165]],[[35,138],[44,123]],[[41,132],[52,115]]],"scaled":[[[8,165],[13,154]],[[32,141],[47,120]],[[35,138],[44,123]],[[41,132],[45,122]]]},"2018-19":{"n":340,"raw":[[[143,21],[153,23]],[[101,63],[118,58]],[[92,72],[119,57]],[[90,74],[92,84]]],"scaled":[[[121,43],[133,43]],[[109,55],[132,44]],[[92,72],[119,57]],[[103,61],[119,57]]]},"2019-20":{"n":341,"raw":[[[18,124],[26,173]],[[55,87],[86,113]],[[61,81],[65,134]],[[69,73],[74,125]]],"scaled":[[[38,104],[41,158]],[[57,85],[61,138]],[[61,81],[65,134]],[[53,89],[67,132]]]},"2020-21":{"n":341,"raw":[[[4,163],[3,171]],[[3,164],[6,168]],[[40,127],[29,145]],[[43,124],[41,133]]],"scaled":[[[25,142],[14,160]],[[6,161],[7,167]],[[40,127],[29,145]],[[37,130],[36,138]]]},"2021-22":{"n":340,"raw":[[[108,75],[72,85]],[[63,120],[65,92]],[[112,71],[92,65]],[[78,105],[80,77]]],"scaled":[[[120,63],[92,65]],[[124,59],[98,59]],[[112,71],[92,65]],[[128,55],[103,54]]]},"2022-23":{"n":340,"raw":[[[174,2],[163,1]],[[128,48],[122,42]],[[114,62],[84,80]],[[127,49],[109,55]]],"scaled":[[[158,18],[142,22]],[[137,39],[132,32]],[[114,62],[84,80]],[[114,62],[113,51]]]},"2023-24":{"n":341,"raw":[[[115,46],[133,47]],[[152,9],[164,16]],[[101,60],[98,82]],[[113,48],[125,55]]],"scaled":[[[109,52],[111,69]],[[105,56],[99,81]],[[101,60],[98,82]],[[118,43],[122,58]]]},"2024-25":{"n":341,"raw":[[[0,174],[0,167]],[[25,149],[23,144]],[[79,95],[71,96]],[[74,100],[67,100]]],"scaled":[[[84,90],[76,91]],[[55,119],[50,117]],[[79,95],[71,96]],[[71,103],[73,94]]]},"2025-26":{"n":294,"raw":[[[51,100],[45,98]],[[91,60],[88,55]],[[62,89],[76,67]],[[88,63],[79,64]]],"scaled":[[[68,83],[67,76]],[[85,66],[89,54]],[[62,89],[76,67]],[[83,68],[82,61]]]}};
+const KEYS=Object.keys(W);
+let win="2012-13",mode="raw",sel=2;
+const $=id=>document.getElementById(id),p=x=>(x*100).toFixed(1)+"%",f3=x=>x.toFixed(3);
+function met(c,n){const[[tn,fp],[fn,tp]]=c,pr=tp/(tp+fp||1),rc=tp/(tp+fn||1);
+ return{acc:(tn+tp)/n,pr,rc,f1:2*pr*rc/((pr+rc)||1),up:(fp+tp)/n}}
+const cmsOf=w=>W[w][mode];
+function base(w){const c=cmsOf(w)[0];return(c[1][0]+c[1][1])/W[w].n}
+function recommend(w){const n=W[w].n,ms=cmsOf(w).map(c=>met(c,n));
+ let idx=ALGS.map((_,i)=>i).filter(i=>ms[i].up>.05&&ms[i].up<.95);if(!idx.length)idx=[0,1,2,3];
+ return idx.sort((a,b)=>ms[b].acc-ms[a].acc)[0]}
+function render(){
+ const n=W[win].n,cms=cmsOf(win),b=base(win),moe=1.96*Math.sqrt(.25/n),ms=cms.map(c=>met(c,n)),m=ms[sel],edge=m.acc-b,rec=recommend(win);
+ $("winsel").innerHTML=KEYS.map(k=>`<option value="${k}" ${k==win?"selected":""}>${k.replace("-","\u2013")} (${W[k].n} test days)</option>`).join("");
+ $("mode").innerHTML=[["raw","Raw"],["scaled","Scaled"]].map(([k,l])=>`<button data-m="${k}" aria-pressed="${k==mode}">${l}</button>`).join("");
+ $("alg").innerHTML=ALGS.map((a,i)=>`<button data-a="${i}" aria-pressed="${i==sel}"><span>${a}</span>${i==rec?'<span class="tag">best fit</span>':''}</button>`).join("");
+ let v,s=(edge*100).toFixed(1);
+ if(m.up>.95||m.up<.05)v=`${ALGS[sel]} just predicts "${m.up>.5?"up":"down"}" on almost every day, so it has learned nothing.`;
+ else if(edge>moe)v=`${ALGS[sel]} beats the baseline by ${s} points, more than the margin of error.`;
+ else if(edge>0)v=`${ALGS[sel]} is ${s} points above the baseline, but that is within the noise.`;
+ else v=`${ALGS[sel]} does not beat the baseline (${s} points).`;
+ $("verdict").textContent=v;
+ $("detail").textContent=`In ${win.replace("-","\u2013")}, up days made up ${p(b)} of the ${n} test days, so always guessing "up" scores ${f3(b)}. The margin of error is about \u00b1${(moe*100).toFixed(1)} points. Best fit in this window: ${ALGS[rec]}.`;
+ $("kpis").innerHTML=[["Accuracy",m.acc],["Precision",m.pr],["Recall",m.rc],["F1 score",m.f1]].map(([l,x])=>`<div class="k"><b>${f3(x)}</b><span>${l}</span></div>`).join("");
+ const c=cms[sel],sh=(x,ok)=>`<div class="c" style="background:${ok?'var(--tealbg)':'transparent'};border:1px solid var(--line)">${x}</div>`;
+ $("cm").innerHTML=`<i></i><i>pred. down</i><i>pred. up</i><i>actual down</i>${sh(c[0][0],1)}${sh(c[0][1],0)}<i>actual up</i>${sh(c[1][0],0)}${sh(c[1][1],1)}`;
+ $("bars").innerHTML=ALGS.map((a,i)=>`<div class="bar ${i==sel?'sel':''}"><span>${a}</span><div class="trk"><div class="fill" style="width:${ms[i].acc*100}%"></div><div class="mk" style="left:${b*100}%"></div></div><b>${f3(ms[i].acc)}</b></div>`).join("");
+ const eds=KEYS.map(k=>{const nn=W[k].n,bb=base(k);return(met(cmsOf(k)[sel],nn).acc-bb)*100}),mx=Math.max(10,...eds.map(Math.abs)),avg=eds.reduce((x,y)=>x+y,0)/eds.length,wins=eds.filter(e=>e>0).length;
+ $("trh").textContent=`${ALGS[sel]}: edge over the baseline in every window (beats it in ${wins} of ${KEYS.length}, average ${avg>0?"+":""}${avg.toFixed(1)} pts)`;
+ $("trend").innerHTML=KEYS.map((k,i)=>{const e=eds[i],w=Math.abs(e)/mx*50;return`<div class="tr ${k==win?'sel':''}" data-w="${k}"><b>${k.replace("-","\u2013")}</b><div class="tz"><i style="${e>=0?`left:50%;width:${w}%;background:var(--good)`:`right:50%;width:${w}%;background:var(--bad)`}"></i></div><span>${e>0?"+":""}${e.toFixed(1)}</span></div>`}).join("");
+ $("tbl").innerHTML=`<tr><th>Algorithm</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>Days predicted up</th><th>Edge vs baseline</th></tr>`+
+  ALGS.map((a,i)=>{const e=(ms[i].acc-b)*100;return`<tr class="${i==sel?'sel':''}"><td>${a}${i==rec?' \u2605':''}</td><td>${f3(ms[i].acc)}</td><td>${f3(ms[i].pr)}</td><td>${f3(ms[i].rc)}</td><td>${f3(ms[i].f1)}</td><td>${(ms[i].up*100).toFixed(0)}%</td><td class="${e>0?'pos':'neg'}">${e>0?'+':''}${e.toFixed(1)} pts</td></tr>`}).join("");
+}
+document.addEventListener("click",e=>{
+ const r=e.target.closest(".tr");if(r){win=r.dataset.w;sel=recommend(win);render();return}
+ const t=e.target.closest("button");if(!t)return;
+ if(t.dataset.m){mode=t.dataset.m;sel=recommend(win)}
+ else if(t.dataset.a)sel=+t.dataset.a;
+ else if(t.id=="best")sel=recommend(win);
+ render()});
+document.addEventListener("change",e=>{if(e.target.id=="winsel"){win=e.target.value;sel=recommend(win);render()}});
+sel=recommend(win);render();
+</script>
+</body>
+</html>
